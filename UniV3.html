@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UniV3 NFPMHarnessLite Test UI</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #081120;
+      --card: #101a33;
+      --card-2: #0d152a;
+      --border: #223253;
+      --text: #eef4ff;
+      --muted: #9fb0d1;
+      --blue: #2563eb;
+      --purple: #7c3aed;
+      --green: #10b981;
+      --orange: #f59e0b;
+      --red: #ef4444;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(37,99,235,0.18), transparent 24%),
+        linear-gradient(180deg, #07101f 0%, #0b1324 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container {
+      width: min(1450px, 96%);
+      margin: 24px auto;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+    }
+
+    h1, h2, h3 { margin-top: 0; }
+    h1 { font-size: 34px; margin-bottom: 10px; }
+    h2 { font-size: 20px; margin-bottom: 12px; }
+    p { color: var(--muted); }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(16,185,129,0.14);
+      border: 1px solid rgba(16,185,129,0.35);
+      color: #a7f3d0;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .status-grid,
+    .layout,
+    .row2 {
+      display: grid;
+      gap: 14px;
+    }
+
+    .status-grid {
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      margin-bottom: 18px;
+    }
+
+    .pill {
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .pill .label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .pill .value { font-weight: 800; word-break: break-all; }
+
+    .layout {
+      grid-template-columns: 1.2fr 0.8fr;
+      align-items: start;
+    }
+
+    .stack { display: grid; gap: 16px; }
+    .row2 { grid-template-columns: 1fr 1fr; }
+
+    .field { margin-bottom: 12px; }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #b9cbff;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      background: #08101f;
+      color: var(--text);
+      border: 1px solid #334766;
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(96,165,250,0.16);
+    }
+
+    textarea { resize: vertical; min-height: 210px; }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 14px;
+      cursor: pointer;
+      font-weight: 800;
+      color: white;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      transition: transform .12s ease, opacity .12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .secondary { background: #1f2937; border: 1px solid #374151; }
+    .warn { background: linear-gradient(135deg, #d97706, #f59e0b); }
+
+    .notice {
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(245,158,11,0.09);
+      border: 1px solid rgba(245,158,11,0.35);
+      color: #fde68a;
+      line-height: 1.6;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      word-break: break-all;
+    }
+
+    .log {
+      background: #050a14;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 260px;
+      max-height: 520px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .log-line {
+      padding: 8px 10px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      border: 1px solid transparent;
+    }
+
+    .log-info { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.35); }
+    .log-success { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35); }
+    .log-error { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.35); }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    ol { color: var(--muted); padding-left: 20px; }
+    li { margin-bottom: 6px; }
+
+    @media (max-width: 960px) {
+      .hero, .layout, .row2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <div class="card">
+        <div class="badge">Ethers v6 • Standalone HTML</div>
+        <h1>NFPMHarnessLite Test UI</h1>
+        <p>
+          Giao diện test trực tiếp cho luồng Uniswap V3 mini: kết nối ví, mint token mock,
+          approve, tạo và initialize pool, mint position, tăng giảm liquidity và đọc dữ liệu position.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Kết nối ví</h2>
+        <div class="actions">
+          <button id="btnConnect">Connect Wallet</button>
+        </div>
+        <div class="hint" style="margin-top: 10px;">
+          Dùng MetaMask hoặc ví EVM tương thích trong trình duyệt.
+        </div>
+      </div>
+    </div>
+
+    <div class="status-grid">
+      <div class="pill"><div class="label">Ví hiện tại</div><div class="value mono" id="walletAddress">Chưa kết nối</div></div>
+      <div class="pill"><div class="label">Chain ID</div><div class="value" id="chainId">—</div></div>
+      <div class="pill"><div class="label">Pool hiện tại</div><div class="value mono" id="poolAddressStatus">Chưa có</div></div>
+      <div class="pill"><div class="label">Token metadata</div><div class="value" id="tokenMetaStatus">Chưa đọc</div></div>
+    </div>
+
+    <div class="notice">
+      Contract harness hiện tại chưa có hàm collect public, nên trang này tập trung vào các chức năng đang triển khai thực tế: mint position, increaseLiquidity, decreaseLiquidity, approve operator và positions.
+    </div>
+
+    <div class="layout">
+      <div class="stack">
+        <div class="card">
+          <h2>1. Setup contract</h2>
+          <div class="row2">
+            <div class="field">
+              <label for="factoryAddress">Factory address</label>
+              <input id="factoryAddress" placeholder="0x..." />
+            </div>
+            <div class="field">
+              <label for="harnessAddress">Harness address</label>
+              <input id="harnessAddress" placeholder="0x..." />
+            </div>
+            <div class="field">
+              <label for="token0Address">Token0 address</label>
+              <input id="token0Address" placeholder="0x..." />
+            </div>
+            <div class="field">
+              <label for="token1Address">Token1 address</label>
+              <input id="token1Address" placeholder="0x..." />
+            </div>
+            <div class="field">
+              <label for="fee">Fee tier</label>
+              <select id="fee">
+                <option value="500">500</option>
+                <option value="3000" selected>3000</option>
+                <option value="10000">10000</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sqrtPriceX96">SqrtPriceX96</label>
+              <input id="sqrtPriceX96" value="79228162514264337593543950336" />
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="btnLoadMeta">Đọc token metadata</button>
+            <button id="btnCheckPool" class="secondary">Check pool</button>
+            <button id="btnCreatePool">Create pool</button>
+            <button id="btnInitializePool" class="warn">Initialize pool</button>
+          </div>
+
+          <div class="field" style="margin-top: 12px;">
+            <label for="poolAddress">Pool address</label>
+            <input id="poolAddress" placeholder="Tự động điền sau khi check hoặc create pool" />
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>2. Mock token actions</h2>
+          <div class="row2">
+            <div class="field">
+              <label for="mintTokenTo">Mint to</label>
+              <input id="mintTokenTo" placeholder="0x..." />
+            </div>
+            <div class="field">
+              <label for="mintTokenAmount">Mint amount</label>
+              <input id="mintTokenAmount" value="1000" />
+            </div>
+            <div class="field">
+              <label for="approveAmount0">Approve amount token0</label>
+              <input id="approveAmount0" value="1000" />
+            </div>
+            <div class="field">
+              <label for="approveAmount1">Approve amount token1</label>
+              <input id="approveAmount1" value="1000" />
+            </div>
+          </div>
+          <div class="actions">
+            <button id="btnMintToken0">Mint token0</button>
+            <button id="btnMintToken1">Mint token1</button>
+            <button id="btnApproveToken0" class="secondary">Approve token0</button>
+            <button id="btnApproveToken1" class="secondary">Approve token1</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>3. Mint position</h2>
+          <div class="row2">
+            <div class="field">
+              <label for="recipient">Recipient</label>
+              <input id="recipient" placeholder="0x..." />
+            </div>
+            <div class="field">
+              <label for="liquidityDesired">Liquidity desired</label>
+              <input id="liquidityDesired" value="1000" />
+            </div>
+            <div class="field">
+              <label for="tickLower">Tick lower</label>
+              <input id="tickLower" value="-600" />
+            </div>
+            <div class="field">
+              <label for="tickUpper">Tick upper</label>
+              <input id="tickUpper" value="600" />
+            </div>
+            <div class="field">
+              <label for="amount0Min">Amount0 min</label>
+              <input id="amount0Min" value="0" />
+            </div>
+            <div class="field">
+              <label for="amount1Min">Amount1 min</label>
+              <input id="amount1Min" value="0" />
+            </div>
+            <div class="field">
+              <label for="deadlineMinutes">Deadline minutes</label>
+              <input id="deadlineMinutes" value="30" />
+            </div>
+          </div>
+          <div class="actions">
+            <button id="btnMintPosition">Mint position</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>4. Manage existing position</h2>
+          <div class="row2">
+            <div class="field">
+              <label for="tokenId">Token ID</label>
+              <input id="tokenId" value="1" />
+            </div>
+            <div class="field">
+              <label for="increaseLiquidityDesired">Increase liquidity desired</label>
+              <input id="increaseLiquidityDesired" value="500" />
+            </div>
+            <div class="field">
+              <label for="decreaseLiquidityAmount">Decrease liquidity amount</label>
+              <input id="decreaseLiquidityAmount" value="100" />
+            </div>
+            <div class="field">
+              <label for="operatorAddress">Operator address</label>
+              <input id="operatorAddress" placeholder="0x..." />
+            </div>
+          </div>
+          <div class="actions">
+            <button id="btnIncreaseLiquidity">Increase liquidity</button>
+            <button id="btnDecreaseLiquidity" class="secondary">Decrease liquidity</button>
+            <button id="btnApproveOperator" class="secondary">Approve operator</button>
+            <button id="btnReadPosition" class="warn">Đọc position</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <h2>5. Dữ liệu position</h2>
+          <textarea id="positionData" readonly>Chưa có dữ liệu position</textarea>
+        </div>
+
+        <div class="card">
+          <h2>6. Log console</h2>
+          <div id="logs" class="log">Chưa có log nào.</div>
+        </div>
+
+        <div class="card">
+          <h2>Checklist test</h2>
+          <ol>
+            <li>Kết nối ví.</li>
+            <li>Nhập factory, harness, token0 và token1.</li>
+            <li>Đọc metadata token để xác nhận địa chỉ đúng.</li>
+            <li>Check pool. Nếu chưa có thì create pool và initialize.</li>
+            <li>Mint token0 và token1 cho ví hiện tại.</li>
+            <li>Approve cả hai token cho harness.</li>
+            <li>Mint position rồi đọc position để lấy tokenId.</li>
+            <li>Test increaseLiquidity, decreaseLiquidity và approve operator.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const mockErc20Abi = [
+      'function name() view returns (string)',
+      'function symbol() view returns (string)',
+      'function decimals() view returns (uint8)',
+      'function totalSupply() view returns (uint256)',
+      'function balanceOf(address) view returns (uint256)',
+      'function allowance(address,address) view returns (uint256)',
+      'function mint(address to, uint256 amount)',
+      'function approve(address spender, uint256 amount) returns (bool)',
+      'function transfer(address to, uint256 amount) returns (bool)',
+      'function transferFrom(address from, address to, uint256 amount) returns (bool)'
+    ];
+
+    const factoryAbi = [
+      'function getPool(address tokenA, address tokenB, uint24 fee) view returns (address)',
+      'function createPool(address tokenA, address tokenB, uint24 fee) returns (address)'
+    ];
+
+    const poolAbi = [
+      'function token0() view returns (address)',
+      'function token1() view returns (address)',
+      'function initialize(uint160 sqrtPriceX96)'
+    ];
+
+    const harnessAbi = [
+      'function factory() view returns (address)',
+      'function ownerOf(uint256) view returns (address)',
+      'function balanceOf(address) view returns (uint256)',
+      'function approve(address to, uint256 tokenId)',
+      'function positions(uint256 tokenId) view returns (uint96 nonce,address operator,address token0,address token1,uint24 fee,int24 tickLower,int24 tickUpper,uint128 liquidity,uint256 feeGrowthInside0LastX128,uint256 feeGrowthInside1LastX128,uint128 tokensOwed0,uint128 tokensOwed1)',
+      'function mint((address token0,address token1,uint24 fee,address recipient,int24 tickLower,int24 tickUpper,uint128 liquidityDesired,uint256 amount0Min,uint256 amount1Min,uint256 deadline)) returns (uint256 tokenId,uint128 liquidity,uint256 amount0,uint256 amount1)',
+      'function increaseLiquidity((uint256 tokenId,uint128 liquidityDesired,uint256 amount0Min,uint256 amount1Min,uint256 deadline)) returns (uint128 liquidity,uint256 amount0,uint256 amount1)',
+      'function decreaseLiquidity((uint256 tokenId,uint128 liquidity,uint256 amount0Min,uint256 amount1Min,uint256 deadline)) returns (uint256 amount0,uint256 amount1)',
+      'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'
+    ];
+
+    const state = {
+      provider: null,
+      signer: null,
+      userAddress: '',
+      chainId: '',
+      token0Info: null,
+      token1Info: null,
+      loading: false
+    };
+
+    function el(id) {
+      return document.getElementById(id);
+    }
+
+    function fmtError(err) {
+      const raw = err?.shortMessage || err?.reason || err?.message || String(err);
+      return String(raw || 'Unknown error')
+        .replace('execution reverted: ', '')
+        .replace('reverted with reason string ', '')
+        .replaceAll('"', '');
+    }
+
+    function addLog(message, type = 'info') {
+      const box = el('logs');
+      if (box.textContent.trim() === 'Chưa có log nào.') box.textContent = '';
+      const line = document.createElement('div');
+      line.className = 'log-line log-' + type;
+      line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
+      box.prepend(line);
+    }
+
+    function setLoading(flag) {
+      state.loading = flag;
+      document.querySelectorAll('button').forEach((btn) => {
+        btn.disabled = flag;
+      });
+    }
+
+    function updateStatus() {
+      el('walletAddress').textContent = state.userAddress || 'Chưa kết nối';
+      el('chainId').textContent = state.chainId || '—';
+      el('poolAddressStatus').textContent = el('poolAddress').value.trim() || 'Chưa có';
+
+      if (state.token0Info && state.token1Info) {
+        el('tokenMetaStatus').textContent = state.token0Info.symbol + ' / ' + state.token1Info.symbol;
+      } else {
+        el('tokenMetaStatus').textContent = 'Chưa đọc';
+      }
+    }
+
+    async function runAction(label, fn) {
+      if (state.loading) return;
+      try {
+        setLoading(true);
+        addLog('Đang xử lý: ' + label, 'info');
+        await fn();
+      } catch (err) {
+        addLog(label + ' thất bại: ' + fmtError(err), 'error');
+      } finally {
+        setLoading(false);
+        updateStatus();
+      }
+    }
+
+    function requireSigner() {
+      if (!state.signer) throw new Error('Kết nối ví trước');
+      return state.signer;
+    }
+
+    function getAddress(id, label) {
+      const value = el(id).value.trim();
+      if (!ethers.isAddress(value)) throw new Error(label + ' không hợp lệ');
+      return value;
+    }
+
+    function getFactory() {
+      return new ethers.Contract(getAddress('factoryAddress', 'Factory address'), factoryAbi, requireSigner());
+    }
+
+    function getHarness() {
+      return new ethers.Contract(getAddress('harnessAddress', 'Harness address'), harnessAbi, requireSigner());
+    }
+
+    function getToken(which) {
+      const id = which === 'token0' ? 'token0Address' : 'token1Address';
+      return new ethers.Contract(getAddress(id, which + ' address'), mockErc20Abi, requireSigner());
+    }
+
+    function getDeadlineTs() {
+      const minutes = Number(el('deadlineMinutes').value || '30');
+      return BigInt(Math.floor(Date.now() / 1000) + (minutes * 60));
+    }
+
+    async function connectWallet() {
+      if (!window.ethereum) throw new Error('Không tìm thấy MetaMask hoặc ví EVM');
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send('eth_requestAccounts', []);
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      const network = await provider.getNetwork();
+
+      state.provider = provider;
+      state.signer = signer;
+      state.userAddress = address;
+      state.chainId = network.chainId.toString();
+
+      if (!el('mintTokenTo').value.trim()) el('mintTokenTo').value = address;
+      if (!el('recipient').value.trim()) el('recipient').value = address;
+
+      addLog('Đã kết nối ví ' + address, 'success');
+      updateStatus();
+    }
+
+    async function loadTokenMeta() {
+      const token0 = getToken('token0');
+      const token1 = getToken('token1');
+      const [n0, s0, d0, n1, s1, d1] = await Promise.all([
+        token0.name(), token0.symbol(), token0.decimals(),
+        token1.name(), token1.symbol(), token1.decimals()
+      ]);
+
+      state.token0Info = { name: n0, symbol: s0, decimals: Number(d0) };
+      state.token1Info = { name: n1, symbol: s1, decimals: Number(d1) };
+      addLog('Đã đọc token: ' + s0 + ' / ' + s1, 'success');
+    }
+
+    async function checkPool() {
+      const factory = getFactory();
+      const token0 = getAddress('token0Address', 'Token0 address');
+      const token1 = getAddress('token1Address', 'Token1 address');
+      const fee = Number(el('fee').value);
+      const pool = await factory.getPool(token0, token1, fee);
+      el('poolAddress').value = pool;
+      if (pool === ethers.ZeroAddress) {
+        addLog('Chưa có pool cho cặp token này ở fee tier đã chọn.', 'error');
+      } else {
+        addLog('Tìm thấy pool: ' + pool, 'success');
+      }
+    }
+
+    async function createPool() {
+      const factory = getFactory();
+      const token0 = getAddress('token0Address', 'Token0 address');
+      const token1 = getAddress('token1Address', 'Token1 address');
+      const fee = Number(el('fee').value);
+      const tx = await factory.createPool(token0, token1, fee);
+      addLog('Đã gửi tx tạo pool: ' + tx.hash, 'info');
+      await tx.wait();
+      const pool = await factory.getPool(token0, token1, fee);
+      el('poolAddress').value = pool;
+      addLog('Pool đã được tạo: ' + pool, 'success');
+    }
+
+    async function initializePool() {
+      const pool = new ethers.Contract(getAddress('poolAddress', 'Pool address'), poolAbi, requireSigner());
+      const sqrtPriceX96 = el('sqrtPriceX96').value.trim();
+      const tx = await pool.initialize(BigInt(sqrtPriceX96));
+      addLog('Đã gửi tx initialize: ' + tx.hash, 'info');
+      await tx.wait();
+      addLog('Pool đã initialize với sqrtPriceX96 = ' + sqrtPriceX96, 'success');
+    }
+
+    async function mintMockToken(which) {
+      const token = getToken(which);
+      const info = which === 'token0' ? state.token0Info : state.token1Info;
+      const decimals = info?.decimals ?? 18;
+      const amount = ethers.parseUnits(el('mintTokenAmount').value.trim() || '0', decimals);
+      const to = getAddress('mintTokenTo', 'Mint to');
+      const tx = await token.mint(to, amount);
+      addLog('Đã gửi tx mint ' + which + ': ' + tx.hash, 'info');
+      await tx.wait();
+      addLog('Mint ' + el('mintTokenAmount').value + ' ' + which + ' thành công cho ' + to, 'success');
+    }
+
+    async function approveToken(which) {
+      const token = getToken(which);
+      const spender = getAddress('harnessAddress', 'Harness address');
+      const info = which === 'token0' ? state.token0Info : state.token1Info;
+      const decimals = info?.decimals ?? 18;
+      const raw = which === 'token0' ? el('approveAmount0').value.trim() : el('approveAmount1').value.trim();
+      const amount = ethers.parseUnits(raw || '0', decimals);
+      const tx = await token.approve(spender, amount);
+      addLog('Đã gửi tx approve ' + which + ': ' + tx.hash, 'info');
+      await tx.wait();
+      addLog('Approve ' + raw + ' ' + which + ' cho harness thành công', 'success');
+    }
+
+    async function mintPosition() {
+      const harness = getHarness();
+      const params = {
+        token0: getAddress('token0Address', 'Token0 address'),
+        token1: getAddress('token1Address', 'Token1 address'),
+        fee: Number(el('fee').value),
+        recipient: getAddress('recipient', 'Recipient'),
+        tickLower: Number(el('tickLower').value),
+        tickUpper: Number(el('tickUpper').value),
+        liquidityDesired: BigInt(el('liquidityDesired').value),
+        amount0Min: BigInt(el('amount0Min').value),
+        amount1Min: BigInt(el('amount1Min').value),
+        deadline: getDeadlineTs()
+      };
+
+      const tx = await harness.mint(params);
+      addLog('Đã gửi tx mint position: ' + tx.hash, 'info');
+      const receipt = await tx.wait();
+
+      let foundTokenId = '';
+      for (const log of receipt.logs || []) {
+        try {
+          const parsed = harness.interface.parseLog(log);
+          if (parsed?.name === 'Transfer') {
+            foundTokenId = parsed.args.tokenId.toString();
+            break;
+          }
+        } catch (e) {}
+      }
+
+      if (foundTokenId) {
+        el('tokenId').value = foundTokenId;
+        addLog('Mint position thành công. tokenId = ' + foundTokenId, 'success');
+      } else {
+        addLog('Mint position thành công nhưng chưa parse được tokenId từ event.', 'success');
+      }
+    }
+
+    async function readPosition() {
+      const harness = getHarness();
+      const tokenId = BigInt(el('tokenId').value.trim());
+      const pos = await harness.positions(tokenId);
+      const owner = await harness.ownerOf(tokenId);
+      const data = {
+        owner,
+        nonce: pos.nonce.toString(),
+        operator: pos.operator,
+        token0: pos.token0,
+        token1: pos.token1,
+        fee: pos.fee.toString(),
+        tickLower: pos.tickLower.toString(),
+        tickUpper: pos.tickUpper.toString(),
+        liquidity: pos.liquidity.toString(),
+        feeGrowthInside0LastX128: pos.feeGrowthInside0LastX128.toString(),
+        feeGrowthInside1LastX128: pos.feeGrowthInside1LastX128.toString(),
+        tokensOwed0: pos.tokensOwed0.toString(),
+        tokensOwed1: pos.tokensOwed1.toString()
+      };
+
+      el('positionData').value = JSON.stringify(data, null, 2);
+      addLog('Đã đọc position #' + tokenId.toString(), 'success');
+    }
+
+    async function increasePosLiquidity() {
+      const harness = getHarness();
+      const params = {
+        tokenId: BigInt(el('tokenId').value),
+        liquidityDesired: BigInt(el('increaseLiquidityDesired').value),
+        amount0Min: BigInt(el('amount0Min').value),
+        amount1Min: BigInt(el('amount1Min').value),
+        deadline: getDeadlineTs()
+      };
+      const tx = await harness.increaseLiquidity(params);
+      addLog('Đã gửi tx increaseLiquidity: ' + tx.hash, 'info');
+      await tx.wait();
+      addLog('Tăng liquidity cho tokenId ' + el('tokenId').value + ' thành công', 'success');
+    }
+
+    async function decreasePosLiquidity() {
+      const harness = getHarness();
+      const params = {
+        tokenId: BigInt(el('tokenId').value),
+        liquidity: BigInt(el('decreaseLiquidityAmount').value),
+        amount0Min: BigInt(el('amount0Min').value),
+        amount1Min: BigInt(el('amount1Min').value),
+        deadline: getDeadlineTs()
+      };
+      const tx = await harness.decreaseLiquidity(params);
+      addLog('Đã gửi tx decreaseLiquidity: ' + tx.hash, 'info');
+      await tx.wait();
+      addLog('Giảm liquidity cho tokenId ' + el('tokenId').value + ' thành công', 'success');
+    }
+
+    async function approveOperator() {
+      const harness = getHarness();
+      const operator = getAddress('operatorAddress', 'Operator address');
+      const tx = await harness.approve(operator, BigInt(el('tokenId').value));
+      addLog('Đã gửi tx approve operator: ' + tx.hash, 'info');
+      await tx.wait();
+      addLog('Đã approve operator ' + operator + ' cho tokenId ' + el('tokenId').value, 'success');
+    }
+
+    el('btnConnect').addEventListener('click', () => runAction('Kết nối ví', connectWallet));
+    el('btnLoadMeta').addEventListener('click', () => runAction('Đọc thông tin token', loadTokenMeta));
+    el('btnCheckPool').addEventListener('click', () => runAction('Kiểm tra pool', checkPool));
+    el('btnCreatePool').addEventListener('click', () => runAction('Tạo pool', createPool));
+    el('btnInitializePool').addEventListener('click', () => runAction('Initialize pool', initializePool));
+    el('btnMintToken0').addEventListener('click', () => runAction('Mint token0', () => mintMockToken('token0')));
+    el('btnMintToken1').addEventListener('click', () => runAction('Mint token1', () => mintMockToken('token1')));
+    el('btnApproveToken0').addEventListener('click', () => runAction('Approve token0', () => approveToken('token0')));
+    el('btnApproveToken1').addEventListener('click', () => runAction('Approve token1', () => approveToken('token1')));
+    el('btnMintPosition').addEventListener('click', () => runAction('Mint position', mintPosition));
+    el('btnIncreaseLiquidity').addEventListener('click', () => runAction('Increase liquidity', increasePosLiquidity));
+    el('btnDecreaseLiquidity').addEventListener('click', () => runAction('Decrease liquidity', decreasePosLiquidity));
+    el('btnApproveOperator').addEventListener('click', () => runAction('Approve operator', approveOperator));
+    el('btnReadPosition').addEventListener('click', () => runAction('Đọc position', readPosition));
+
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', () => window.location.reload());
+      window.ethereum.on('chainChanged', () => window.location.reload());
+    }
+
+    updateStatus();
+  </script>
+</body>
+</html>
