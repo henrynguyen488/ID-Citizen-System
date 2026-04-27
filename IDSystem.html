@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BhutanStyleCitizenID Test UI</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #071226;
+      --bg-soft: #0b1830;
+      --card: rgba(9, 20, 40, 0.88);
+      --border: rgba(120, 170, 255, 0.18);
+      --text: #eef4ff;
+      --muted: #9bb0d3;
+      --blue: #3b82f6;
+      --blue-2: #60a5fa;
+      --green: #10b981;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --purple: #8b5cf6;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(59,130,246,0.18), transparent 28%),
+        radial-gradient(circle at top left, rgba(16,185,129,0.12), transparent 22%),
+        linear-gradient(180deg, #071226 0%, #08101f 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .hero {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 46px;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.6;
+      max-width: 900px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .chip {
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: #d8e6ff;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .left, .right {
+      display: grid;
+      gap: 20px;
+    }
+
+    .right {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(13, 25, 48, 0.96), rgba(8, 17, 33, 0.96));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.16), transparent 60%);
+      pointer-events: none;
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 26px;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    .card p.desc {
+      margin: -2px 0 16px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .row {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .row3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #9ec5ff;
+      letter-spacing: 0.01em;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid rgba(148, 186, 255, 0.16);
+      background: #030a17;
+      color: var(--text);
+      border-radius: 15px;
+      padding: 13px 14px;
+      outline: none;
+      transition: 0.18s ease;
+      font-size: 14px;
+    }
+
+    textarea { resize: vertical; min-height: 108px; }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(96, 165, 250, 0.7);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      padding: 12px 16px;
+      border-radius: 15px;
+      color: white;
+      font-weight: 800;
+      font-size: 14px;
+      transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.22);
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(1px); }
+
+    .btn-blue { background: linear-gradient(135deg, var(--blue), var(--blue-2)); }
+    .btn-slate { background: linear-gradient(135deg, #475569, #64748b); }
+    .btn-green { background: linear-gradient(135deg, #059669, #10b981); }
+    .btn-orange { background: linear-gradient(135deg, #d97706, #f59e0b); }
+    .btn-red { background: linear-gradient(135deg, #dc2626, #ef4444); }
+    .btn-purple { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+
+    .status {
+      border: 1px solid rgba(148, 186, 255, 0.14);
+      background: rgba(2, 10, 24, 0.9);
+      border-radius: 18px;
+      padding: 14px 15px;
+      color: #d8e8ff;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 14px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .metric {
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 186, 255, 0.14);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .metric .k {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric .v {
+      font-weight: 800;
+      line-height: 1.5;
+      word-break: break-word;
+      font-size: 14px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .hint {
+      margin-top: 10px;
+      border-left: 3px solid rgba(96, 165, 250, 0.8);
+      padding: 10px 12px;
+      border-radius: 0 12px 12px 0;
+      background: rgba(59, 130, 246, 0.08);
+      color: #d6e7ff;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .log {
+      min-height: 240px;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .footnote {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 1200px) {
+      .layout { grid-template-columns: 1fr; }
+      .right { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 880px) {
+      .right { grid-template-columns: 1fr; }
+      .row2, .row3, .mini-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 34px; }
+      .shell { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div>
+        <h1>🪪 BhutanStyleCitizenID Test UI</h1>
+        <p>
+          Giao diện test đẹp theo style dark card để thao tác với contract quản lý định danh công dân theo hướng privacy-first:
+          đăng ký citizen, cập nhật profile hash, đổi ví đại diện, set consent, đổi status, tra cứu identity và verify credential có consent.
+        </p>
+        <div class="chips">
+          <div class="chip">MetaMask</div>
+          <div class="chip">Ethers v6</div>
+          <div class="chip">Hash Preview</div>
+          <div class="chip">Role-aware Testing</div>
+          <div class="chip">Standalone HTML</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div class="left">
+        <div class="card">
+          <h2>🔌 Kết nối & cấu hình</h2>
+          <p class="desc">Nhập địa chỉ contract, kết nối MetaMask, rồi load contract để bắt đầu test.</p>
+
+          <div class="actions">
+            <button class="btn-blue" id="connectBtn">Connect Wallet</button>
+            <button class="btn-slate" id="loadContractBtn">Load Contract</button>
+          </div>
+
+          <div class="row" style="margin-top:14px;">
+            <label>Contract address (BhutanStyleCitizenID)</label>
+            <input id="contractAddress" placeholder="0x..." />
+          </div>
+
+          <div class="row2">
+            <div class="row">
+              <label>Connected account</label>
+              <input id="connectedAccount" readonly placeholder="Chưa kết nối" />
+            </div>
+            <div class="row">
+              <label>Chain ID</label>
+              <input id="chainId" readonly placeholder="-" />
+            </div>
+          </div>
+
+          <div class="status" id="walletStatus">Chưa kết nối ví.</div>
+
+          <div class="mini-grid">
+            <div class="metric">
+              <div class="k">Admin role?</div>
+              <div class="v" id="isAdmin">-</div>
+            </div>
+            <div class="metric">
+              <div class="k">Issuer role?</div>
+              <div class="v" id="isIssuer">-</div>
+            </div>
+          </div>
+
+          <div class="hint">
+            <b>Gợi ý test:</b><br>
+            - Dùng account có <span class="mono">ISSUER_ROLE</span> để <b>register</b>, <b>updateProfileHash</b>, <b>relinkWallet</b>, <b>suspend/reactivate/revoke</b>.<br>
+            - Dùng wallet citizen hoặc admin để <b>setConsent</b>.<br>
+            - Dùng wallet verifier đã được cấp consent để gọi <b>verifyWithConsent</b>.
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>🧮 Tạo hash nhanh để test</h2>
+          <p class="desc">Nhập raw string để tạo <span class="mono">keccak256(utf8)</span> rồi copy sang citizenIdHash hoặc profileHash.</p>
+
+          <div class="row">
+            <label>Raw citizen ID / text</label>
+            <input id="rawCitizenInput" placeholder="VD: 123456789012" />
+          </div>
+          <div class="row">
+            <label>Citizen hash output</label>
+            <textarea id="citizenHashOutput" class="mono" readonly></textarea>
+          </div>
+          <div class="actions">
+            <button class="btn-purple" id="hashCitizenBtn">Hash citizen text</button>
+            <button class="btn-slate" id="useCitizenHashBtn">Dùng cho form</button>
+          </div>
+
+          <hr style="border-color: rgba(148,186,255,0.12); margin: 18px 0;">
+
+          <div class="row">
+            <label>Raw profile / VC json / text</label>
+            <textarea id="rawProfileInput" placeholder='VD: {"name":"A","dob":"1998-04-09"}'></textarea>
+          </div>
+          <div class="row">
+            <label>Profile hash output</label>
+            <textarea id="profileHashOutput" class="mono" readonly></textarea>
+          </div>
+          <div class="actions">
+            <button class="btn-purple" id="hashProfileBtn">Hash profile text</button>
+            <button class="btn-slate" id="useProfileHashBtn">Dùng cho form</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>📋 Log kết quả</h2>
+          <p class="desc">Tất cả tx hash, lỗi revert, kết quả read call sẽ hiện ở đây.</p>
+          <textarea id="logBox" class="log mono" readonly></textarea>
+          <div class="actions">
+            <button class="btn-slate" id="clearLogBtn">Clear log</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="card">
+          <h2>📝 Register citizen</h2>
+          <p class="desc">Gọi <span class="mono">registerCitizen(bytes32,address,bytes32)</span>.</p>
+          <div class="row">
+            <label>Citizen ID Hash</label>
+            <input id="registerCitizenIdHash" class="mono" placeholder="0x..." />
+          </div>
+          <div class="row">
+            <label>Citizen wallet</label>
+            <input id="registerWallet" placeholder="0x..." />
+          </div>
+          <div class="row">
+            <label>Profile hash</label>
+            <input id="registerProfileHash" class="mono" placeholder="0x..." />
+          </div>
+          <div class="actions">
+            <button class="btn-green" id="registerBtn">Register Citizen</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>👁️ Read identity</h2>
+          <p class="desc">Tra cứu record public-safe và wallet liên kết.</p>
+          <div class="row">
+            <label>Citizen ID Hash</label>
+            <input id="readCitizenIdHash" class="mono" placeholder="0x..." />
+          </div>
+          <div class="actions">
+            <button class="btn-blue" id="getIdentityBtn">Get Identity</button>
+            <button class="btn-slate" id="myCitizenBtn">My Citizen ID Hash</button>
+          </div>
+
+          <div class="mini-grid" style="margin-top:14px;">
+            <div class="metric full">
+              <div class="k">Wallet</div>
+              <div class="v mono" id="identityWallet">-</div>
+            </div>
+            <div class="metric full">
+              <div class="k">Profile Hash</div>
+              <div class="v mono" id="identityProfileHash">-</div>
+            </div>
+            <div class="metric">
+              <div class="k">Issued At</div>
+              <div class="v" id="identityIssuedAt">-</div>
+            </div>
+            <div class="metric">
+              <div class="k">Updated At</div>
+              <div class="v" id="identityUpdatedAt">-</div>
+            </div>
+            <div class="metric full">
+              <div class="k">Status</div>
+              <div class="v" id="identityStatus">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>🛠️ Update profile hash</h2>
+          <p class="desc">Chỉ issuer được cập nhật hash hồ sơ/credential.</p>
+          <div class="row">
+            <label>Citizen ID Hash</label>
+            <input id="updateCitizenIdHash" class="mono" placeholder="0x..." />
+          </div>
+          <div class="row">
+            <label>New profile hash</label>
+            <input id="updateProfileHash" class="mono" placeholder="0x..." />
+          </div>
+          <div class="actions">
+            <button class="btn-orange" id="updateProfileBtn">Update Profile Hash</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>🔗 Relink wallet</h2>
+          <p class="desc">Đổi ví đại diện cho citizen.</p>
+          <div class="row">
+            <label>Citizen ID Hash</label>
+            <input id="relinkCitizenIdHash" class="mono" placeholder="0x..." />
+          </div>
+          <div class="row">
+            <label>New wallet</label>
+            <input id="newWallet" placeholder="0x..." />
+          </div>
+          <div class="actions">
+            <button class="btn-orange" id="relinkBtn">Relink Wallet</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>🤝 Set consent</h2>
+          <p class="desc">Citizen owner hoặc admin có thể cấp/thu hồi quyền cho verifier.</p>
+          <div class="row">
+            <label>Citizen ID Hash</label>
+            <input id="consentCitizenIdHash" class="mono" placeholder="0x..." />
+          </div>
+          <div class="row2">
+            <div class="row">
+              <label>Verifier</label>
+              <input id="verifierAddress" placeholder="0x..." />
+            </div>
+            <div class="row">
+              <label>Allowed</label>
+              <select id="consentAllowed">
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn-green" id="setConsentBtn">Set Consent</button>
+            <button class="btn-slate" id="checkConsentBtn">Check Consent</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>✅ Verify with consent</h2>
+          <p class="desc">Verifier đã được cấp quyền có thể kiểm tra claimed profile hash có khớp không.</p>
+          <div class="row">
+            <label>Citizen ID Hash</label>
+            <input id="verifyCitizenIdHash" class="mono" placeholder="0x..." />
+          </div>
+          <div class="row">
+            <label>Claimed profile hash</label>
+            <input id="claimedProfileHash" class="mono" placeholder="0x..." />
+          </div>
+          <div class="actions">
+            <button class="btn-blue" id="checkVerifyConsentBtn">Check Verify Consent</button>
+          </div>
+          <div class="status" id="verifyResult">Chưa verify.</div>
+        </div>
+
+        <div class="card">
+          <h2>🚦 Status actions</h2>
+          <p class="desc">Quản lý trạng thái ACTIVE / SUSPENDED / REVOKED.</p>
+          <div class="row">
+            <label>Citizen ID Hash</label>
+            <input id="statusCitizenIdHash" class="mono" placeholder="0x..." />
+          </div>
+          <div class="actions">
+            <button class="btn-orange" id="suspendBtn">Suspend</button>
+            <button class="btn-green" id="reactivateBtn">Reactivate</button>
+            <button class="btn-red" id="revokeBtn">Revoke</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footnote">
+      UI này bám theo ABI của contract <span class="mono">BhutanStyleCitizenID</span> bạn gửi, gồm các flow register, update, relink, consent, verify và quản lý status. Phần hash preview giúp test tiện hơn khi bạn chỉ có raw text. 
+    </div>
+  </div>
+
+  <script>
+    const ISSUER_ROLE = ethers.keccak256(ethers.toUtf8Bytes("ISSUER_ROLE"));
+    const ZERO_HASH = "0x" + "00".repeat(32);
+    const STATUS_MAP = ["NONE", "ACTIVE", "SUSPENDED", "REVOKED"];
+
+    const ABI = [
+      "function DEFAULT_ADMIN_ROLE() view returns (bytes32)",
+      "function ISSUER_ROLE() view returns (bytes32)",
+      "function hasRole(bytes32 role, address account) view returns (bool)",
+      "function registerCitizen(bytes32 citizenIdHash, address wallet, bytes32 profileHash)",
+      "function updateCitizen(bytes32 citizenIdHash, bytes32 newProfileHash)",
+      "function changeWallet(bytes32 citizenIdHash, address newWallet)",
+      "function setConsent(bytes32 citizenIdHash, address verifier, bool allowed)",
+      "function suspendCitizen(bytes32 citizenIdHash)",
+      "function reactiveCitizen(bytes32 citizenIdHash)",
+      "function revokeCitizen(bytes32 citizenIdHash)",
+      "function getIdentity (bytes32 citizenIdHash) view returns ( bytes32 citizenHash,bytes32 profileHash,address wallet, uint64 issuedAt, uint64 updatedAt, uint8 status)",
+      "function checkVerifyConsent(bytes32 citizenIdHash, bytes32 claimedProfileHash) view returns (bool)",
+      "function myCitizenHash() view returns (bytes32)",
+      "function walletToCitizen(address wallet) view returns (bytes32)",
+      "function verifierConsent(bytes32 citizenIdHash, address verifier) view returns (bool)"
+    ];
+
+    let provider;
+    let signer;
+    let contract;
+    let currentAccount = "";
+
+    const $ = (id) => document.getElementById(id);
+
+    function log(msg, type = "ok") {
+      const prefix = type === "err" ? "❌" : type === "warn" ? "⚠️" : "✅";
+      $("logBox").value = `${prefix} ${msg}\n\n` + $("logBox").value;
+    }
+
+    function pretty(v) {
+      return JSON.stringify(v, (_, value) => typeof value === "bigint" ? value.toString() : value, 2);
+    }
+
+    function formatTimestamp(ts) {
+      if (!ts || Number(ts) === 0) return "-";
+      const d = new Date(Number(ts) * 1000);
+      return `${Number(ts)} • ${d.toLocaleString()}`;
+    }
+
+    function statusName(status) {
+      const idx = Number(status);
+      return STATUS_MAP[idx] ?? `UNKNOWN(${status})`;
+    }
+
+    function requireContract() {
+      if (!contract) throw new Error("Bạn chưa load contract.");
+    }
+
+    function safeHashUtf8(text) {
+      return ethers.keccak256(ethers.toUtf8Bytes(text));
+    }
+
+    function isBytes32(v) {
+      return /^0x[a-fA-F0-9]{64}$/.test(v || "");
+    }
+
+    function fillSharedCitizenHash(hash) {
+      const ids = [
+        "registerCitizenIdHash", "readCitizenIdHash", "updateCitizenIdHash",
+        "relinkCitizenIdHash", "consentCitizenIdHash", "verifyCitizenIdHash", "statusCitizenIdHash"
+      ];
+      ids.forEach(id => { $(id).value = hash; });
+    }
+
+    async function connectWallet() {
+      if (!window.ethereum) throw new Error("Chưa có MetaMask trong trình duyệt.");
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+      currentAccount = await signer.getAddress();
+      const network = await provider.getNetwork();
+
+      $("connectedAccount").value = currentAccount;
+      $("chainId").value = network.chainId.toString();
+      $("walletStatus").textContent = `Đã kết nối ví\nAccount: ${currentAccount}\nChain ID: ${network.chainId}`;
+      log(`Đã kết nối ví ${currentAccount}`);
+    }
+
+    async function loadContract() {
+      if (!signer) throw new Error("Hãy connect wallet trước.");
+      const address = $("contractAddress").value.trim();
+      if (!ethers.isAddress(address)) throw new Error("Contract address không hợp lệ.");
+      contract = new ethers.Contract(address, ABI, signer);
+
+      const adminRole = await contract.DEFAULT_ADMIN_ROLE();
+      const [isAdmin, isIssuer] = await Promise.all([
+        contract.hasRole(adminRole, currentAccount),
+        contract.hasRole(ISSUER_ROLE, currentAccount)
+      ]);
+
+      $("isAdmin").textContent = isAdmin ? "YES ✅" : "NO";
+      $("isIssuer").textContent = isIssuer ? "YES ✅" : "NO";
+      $("walletStatus").textContent += `\nContract loaded: ${address}`;
+      log(`Đã load contract ${address}\nAdmin: ${isAdmin}\nIssuer: ${isIssuer}`);
+    }
+
+    async function sendTx(txPromise, label) {
+      const tx = await txPromise;
+      log(`${label} - tx sent: ${tx.hash}`);
+      const rc = await tx.wait();
+      log(`${label} - mined at block ${rc.blockNumber}`);
+      return rc;
+    }
+
+    function hashCitizen() {
+      const raw = $("rawCitizenInput").value;
+      if (!raw.trim()) throw new Error("Hãy nhập raw citizen text.");
+      const out = safeHashUtf8(raw);
+      $("citizenHashOutput").value = out;
+      log(`Đã tạo citizen hash:\n${out}`);
+    }
+
+    function hashProfile() {
+      const raw = $("rawProfileInput").value;
+      if (!raw.trim()) throw new Error("Hãy nhập raw profile text.");
+      const out = safeHashUtf8(raw);
+      $("profileHashOutput").value = out;
+      log(`Đã tạo profile hash:\n${out}`);
+    }
+
+    async function registerCitizen() {
+      requireContract();
+      const citizenIdHash = $("registerCitizenIdHash").value.trim();
+      const wallet = $("registerWallet").value.trim();
+      const profileHash = $("registerProfileHash").value.trim();
+      if (!isBytes32(citizenIdHash)) throw new Error("Citizen ID Hash phải là bytes32 hợp lệ.");
+      if (!ethers.isAddress(wallet)) throw new Error("Citizen wallet không hợp lệ.");
+      if (!isBytes32(profileHash)) throw new Error("Profile hash phải là bytes32 hợp lệ.");
+      await sendTx(contract.registerCitizen(citizenIdHash, wallet, profileHash), "Register citizen");
+    }
+
+    async function getIdentity() {
+      requireContract();
+      const citizenIdHash = $("readCitizenIdHash").value.trim();
+      if (!isBytes32(citizenIdHash)) throw new Error("Citizen ID Hash không hợp lệ.");
+      const res = await contract.getIdentity(citizenIdHash);
+      $("identityWallet").textContent = res.wallet;
+      $("identityProfileHash").textContent = res.profileHash;
+      $("identityIssuedAt").textContent = formatTimestamp(res.issuedAt);
+      $("identityUpdatedAt").textContent = formatTimestamp(res.updatedAt);
+      $("identityStatus").textContent = `${statusName(res.status)} (${res.status})`;
+      log(`getIdentity(${citizenIdHash}) =\n${pretty(res)}`);
+    }
+
+    async function myCitizenHash() {
+      requireContract();
+      const hash = await contract.myCitizenIdHash();
+      log(`myCitizenIdHash() = ${hash}`);
+      fillSharedCitizenHash(hash);
+    }
+
+    async function updateProfileHashTx() {
+      requireContract();
+      const citizenIdHash = $("updateCitizenIdHash").value.trim();
+      const newProfileHash = $("updateProfileHash").value.trim();
+      if (!isBytes32(citizenIdHash)) throw new Error("Citizen ID Hash không hợp lệ.");
+      if (!isBytes32(newProfileHash)) throw new Error("New profile hash không hợp lệ.");
+      await sendTx(contract.updateCitizen(citizenIdHash, newProfileHash), "Update profile hash");
+    }
+
+    async function changeWallet() {
+      requireContract();
+      const citizenIdHash = $("relinkCitizenIdHash").value.trim();
+      const newWallet = $("newWallet").value.trim();
+      if (!isBytes32(citizenIdHash)) throw new Error("Citizen ID Hash không hợp lệ.");
+      if (!ethers.isAddress(newWallet)) throw new Error("New wallet không hợp lệ.");
+      await sendTx(contract.changeWallet(citizenIdHash, newWallet), "Change wallet");
+    }
+
+    async function setConsent() {
+      requireContract();
+      const citizenIdHash = $("consentCitizenIdHash").value.trim();
+      const verifier = $("verifierAddress").value.trim();
+      const allowed = $("consentAllowed").value === "true";
+      if (!isBytes32(citizenIdHash)) throw new Error("Citizen ID Hash không hợp lệ.");
+      if (!ethers.isAddress(verifier)) throw new Error("Verifier address không hợp lệ.");
+      await sendTx(contract.setConsent(citizenIdHash, verifier, allowed), `Set consent = ${allowed}`);
+    }
+
+    async function checkConsent() {
+      requireContract();
+      const citizenIdHash = $("consentCitizenIdHash").value.trim();
+      const verifier = $("verifierAddress").value.trim();
+      if (!isBytes32(citizenIdHash)) throw new Error("Citizen ID Hash không hợp lệ.");
+      if (!ethers.isAddress(verifier)) throw new Error("Verifier address không hợp lệ.");
+      const allowed = await contract.verifierConsent(citizenIdHash, verifier);
+      log(`verifierConsent(${citizenIdHash}, ${verifier}) = ${allowed}`);
+    }
+
+    async function checkVerifyConsent() {
+      requireContract();
+      const citizenIdHash = $("verifyCitizenIdHash").value.trim();
+      const claimedProfileHash = $("claimedProfileHash").value.trim();
+      if (!isBytes32(citizenIdHash)) throw new Error("Citizen ID Hash không hợp lệ.");
+      if (!isBytes32(claimedProfileHash)) throw new Error("Claimed profile hash không hợp lệ.");
+      const ok = await contract.checkVerifyConsent(citizenIdHash, claimedProfileHash);
+      $("verifyResult").textContent = ok ? "✅ VERIFY SUCCESS: profile hash khớp" : "❌ VERIFY FALSE: profile hash không khớp";
+      log(`checkVerifyConsent(${citizenIdHash}, ${claimedProfileHash}) = ${ok}`);
+    }
+
+    async function suspendCitizen() {
+      requireContract();
+      const citizenIdHash = $("statusCitizenIdHash").value.trim();
+      if (!isBytes32(citizenIdHash)) throw new Error("Citizen ID Hash không hợp lệ.");
+      await sendTx(contract.suspendCitizen(citizenIdHash), "Suspend citizen");
+    }
+
+    async function reactiveCitizen() {
+      requireContract();
+      const citizenIdHash = $("statusCitizenIdHash").value.trim();
+      if (!isBytes32(citizenIdHash)) throw new Error("Citizen ID Hash không hợp lệ.");
+      await sendTx(contract.reactiveCitizen(citizenIdHash), "Reactivate citizen");
+    }
+
+    async function revokeCitizen() {
+      requireContract();
+      const citizenIdHash = $("statusCitizenIdHash").value.trim();
+      if (!isBytes32(citizenIdHash)) throw new Error("Citizen ID Hash không hợp lệ.");
+      await sendTx(contract.revokeCitizen(citizenIdHash), "Revoke citizen");
+    }
+
+    function bind(id, fn) {
+      $(id).addEventListener("click", async () => {
+        try {
+          await fn();
+        } catch (err) {
+          const msg = err?.shortMessage || err?.reason || err?.info?.error?.message || err?.message || String(err);
+          log(msg, "err");
+          console.error(err);
+        }
+      });
+    }
+
+    bind("connectBtn", connectWallet);
+    bind("loadContractBtn", loadContract);
+    bind("hashCitizenBtn", hashCitizen);
+    bind("hashProfileBtn", hashProfile);
+    bind("useCitizenHashBtn", () => {
+      const hash = $("citizenHashOutput").value.trim();
+      if (!isBytes32(hash)) throw new Error("Chưa có citizen hash hợp lệ.");
+      fillSharedCitizenHash(hash);
+      log("Đã đổ citizen hash sang các form.", "warn");
+    });
+    bind("useProfileHashBtn", () => {
+      const hash = $("profileHashOutput").value.trim();
+      if (!isBytes32(hash)) throw new Error("Chưa có profile hash hợp lệ.");
+      $("registerProfileHash").value = hash;
+      $("updateProfileHash").value = hash;
+      $("claimedProfileHash").value = hash;
+      log("Đã đổ profile hash sang các form.", "warn");
+    });
+    bind("registerBtn", registerCitizen);
+    bind("getIdentityBtn", getIdentity);
+    bind("myCitizenBtn", myCitizenHash);
+    bind("updateProfileBtn", updateProfileHashTx);
+    bind("relinkBtn", changeWallet);
+    bind("setConsentBtn", setConsent);
+    bind("checkConsentBtn", checkConsent);
+    bind("checkVerifyConsentBtn", checkVerifyConsent);
+    bind("suspendBtn", suspendCitizen);
+    bind("reactivateBtn", reactiveCitizen);
+    bind("revokeBtn", revokeCitizen);
+
+    $("clearLogBtn").addEventListener("click", () => $("logBox").value = "");
+  </script>
+</body>
+</html>
